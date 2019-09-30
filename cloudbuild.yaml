@@ -1,0 +1,47 @@
+steps:
+- name: 'gcr.io/cloud-builders/go'
+  args: ['build', '-o', 'hello-amd64']
+  env: ['GOARCH=amd64', 'GOPATH=.', 'CGO_ENABLED=0']
+  id: AMD64_BUILD
+  waitFor: ['-']
+- name: 'gcr.io/cloud-builders/go'
+  args: ['build', '-o', 'hello-arm32v7']
+  env: ['GOARCH=arm', 'GOARM=7', 'GOPATH=.', 'CGO_ENABLED=0']
+  id: ARM7_BUILD
+  waitFor: ['-']
+- name: 'gcr.io/cloud-builders/go'
+  args: ['build', '-o', 'hello-arm32v6']
+  env: ['GOARCH=arm', 'GOARM=6', 'GOPATH=.', 'CGO_ENABLED=0']
+  id: ARM6_BUILD
+  waitFor: ['-']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/hello:amd64', '.']
+  waitFor:
+    - AMD64_BUILD
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['run', '--privileged', 'multiarch/qemu-user-static:register', '--reset']
+  id: QEMU
+  waitFor: ['-']
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/hello:arm32v7', '--build-arg', 'ARCH=arm32v7', '.']
+  waitFor:
+    - QEMU
+    - ARM7_BUILD
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/hello:arm32v6', '--build-arg', 'ARCH=arm32v6', '.']
+  waitFor:
+    - QEMU
+    - ARM6_BUILD
+
+artifacts:
+  objects:
+    location: 'gs://$PROJECT_ID-hello/'
+    paths: ['hello-amd64', 'hello-arm32v7', 'hello-arm32v6']
+
+images:
+  ['gcr.io/$PROJECT_ID/hello:amd64',
+   'gcr.io/$PROJECT_ID/hello:arm32v7',
+   'gcr.io/$PROJECT_ID/hello:arm32v6']
