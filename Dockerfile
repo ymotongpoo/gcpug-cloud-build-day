@@ -13,7 +13,7 @@
 # limitations under the License.
 
 ARG ARCH=amd64
-FROM alpine as certs
+FROM ${ARCH}/alpine as certs
 RUN apk update && apk add ca-certificates
 
 FROM ${ARCH}/busybox:latest
