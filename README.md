@@ -15,3 +15,12 @@ This repository is created to demonstrate the following features of [Google Clou
 ```
 $ gcloud builds submit --config cloudbuild.yaml .
 ```
+
+You can try this on your local environment if you want:
+
+```
+$ cloud-build-local --config cloudbuild.yaml --dryrun=false --push .
+```
+
+In order to run Cloud Build locally, you need to set up the environment in advance.
+https://cloud.google.com/cloud-build/docs/build-debug-locally
